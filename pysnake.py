@@ -2,10 +2,22 @@ import curses, random
 from curses import KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN
 
 
-curses.initscr()
+scr = curses.initscr()
 curses.start_color()
-win = curses.newwin(20, 20, 0, 0)
-stats = curses.newwin(3, 20, 20, 0)
+
+# badamy wielkość terminala
+wysokosc, szerokosc = scr.getmaxyx()
+
+if wysokosc < 10 or szerokosc < 8:
+    print('Zbyt mało miejsca, aby rozpocząć grę.')
+    exit()
+
+# wymiary planszy
+# szerokosc
+wysokosc -= 3
+
+win = curses.newwin(wysokosc, szerokosc, 0, 0)
+stats = curses.newwin(3, szerokosc, wysokosc, 0)
 win.keypad(1)
 curses.noecho()
 curses.curs_set(0)
@@ -28,7 +40,7 @@ curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
 
 # opcje startowe
 key = KEY_RIGHT
-lista = [[5, 5]]
+snake = [[5, 5]]
 x = 5
 y = 5
 jablko = [5, 6]
@@ -91,21 +103,21 @@ while key != 27:
         x += 1
 
     # granice planszy
-    if x == 0 or x == 19 or y == 0 or y == 19:
+    if x == 0 or x == wysokosc - 1 or y == 0 or y == szerokosc - 1:
         break
 
     # wchodzenie węża w samego siebie
-    if [x, y] in lista:
+    if [x, y] in snake:
         break
 
     # rysowanie węza na planszy,teraz z kolorkami xD
     win.addch(x, y, curses.ACS_BOARD, curses.color_pair(3),)
-    if len(lista) > 1:
-        win.addch(lista[0][0], lista[0][1], curses.ACS_BOARD, curses.color_pair(2),)
+    if len(snake) > 1:
+        win.addch(snake[0][0], snake[0][1], curses.ACS_BOARD, curses.color_pair(2),)
 
     # dodawanie kolejnego koordynatu (głowy węża) do listy wszystkich punktów
     # w których wąż się znajduje
-    lista.insert(0, [x, y])
+    snake.insert(0, [x, y])
 
     # wynik/wydłużanie węża
     if x == jablko[0] and y == jablko[1]:
@@ -114,10 +126,10 @@ while key != 27:
         stats.refresh()
         # tworzenie nowych koordynatów jabłka
         while True:
-            jablko[0] = random.randint(1, 18)
-            jablko[1] = random.randint(1, 18)
+            jablko[0] = random.randint(1, wysokosc - 2)
+            jablko[1] = random.randint(1, szerokosc - 2)
 
-            if jablko not in lista:
+            if jablko not in snake:
                 break
 
         # dodawanie jabłka
@@ -126,8 +138,8 @@ while key != 27:
     # jeżeli jabłko nie zostało zebrane, usuń ostatni koordynat węża z listy
     # (długość węża pozostaje taka sama)
     else:
-        win.addch(lista[-1][0], lista[-1][1], ' ')
-        lista.pop()
+        win.addch(snake[-1][0], snake[-1][1], ' ')
+        snake.pop()
 
     # opóźnienie, dwie opcje, z czego druga bardziej responsywna
     # curses.napms(time)
