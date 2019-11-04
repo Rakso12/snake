@@ -1,6 +1,8 @@
 import curses, random
 from curses import KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN
 
+przegrana_text = 'Przegrałeś!'
+wygrana_text = 'Wygrałeś!'
 
 scr = curses.initscr()
 curses.start_color()
@@ -8,13 +10,14 @@ curses.start_color()
 # badamy wielkość terminala
 wysokosc, szerokosc = scr.getmaxyx()
 
-if wysokosc < 10 or szerokosc < 8:
+if wysokosc < 10 or szerokosc < len(przegrana_text) + 2:
     print('Zbyt mało miejsca, aby rozpocząć grę.')
     exit()
 
 # wymiary planszy
 # szerokosc
 wysokosc -= 3
+pole = (wysokosc - 2) * (szerokosc - 2)
 
 win = curses.newwin(wysokosc, szerokosc, 0, 0)
 stats = curses.newwin(3, szerokosc, wysokosc, 0)
@@ -46,6 +49,8 @@ y = 5
 jablko = [5, 6]
 score = 0
 time = 250
+przegrana_text = 'Przegrałeś! :<'
+wygrana_text = 'Wygrałeś! :>'
 
 # opcje dodatkowe
 rave = 0
@@ -92,6 +97,9 @@ while key != 27:
     else:
         key = event
 
+    if event not in (KEY_LEFT, KEY_DOWN, KEY_RIGHT, KEY_UP, -1, 27):
+        key = prevKey
+
     # basically zmienianie koordynatów głowy węża
     if key == KEY_RIGHT:
         y += 1
@@ -104,10 +112,12 @@ while key != 27:
 
     # granice planszy
     if x == 0 or x == wysokosc - 1 or y == 0 or y == szerokosc - 1:
+        wygrana = -1
         break
 
     # wchodzenie węża w samego siebie
     if [x, y] in snake:
+        wygrana = -1
         break
 
     # rysowanie węza na planszy,teraz z kolorkami xD
@@ -141,9 +151,24 @@ while key != 27:
         win.addch(snake[-1][0], snake[-1][1], ' ')
         snake.pop()
 
+    if score >= pole - 1 :
+        wygrana = 1
+        break
+
     # opóźnienie, dwie opcje, z czego druga bardziej responsywna
     # curses.napms(time)
     win.timeout(time)
+
+if wygrana == -1 :
+    win.addstr(int((wysokosc)/2), int(szerokosc/2) - int(len(przegrana_text) / 2), przegrana_text)
+
+if wygrana == 1 :
+    win.addstr(int((wysokosc)/2), int(szerokosc/2) - int(len(wygrana_text) / 2), wygrana_text)
+
+win.refresh()
+while True:
+    if win.getch() != -1:
+        break
 
 curses.nocbreak()
 win.keypad(False)
