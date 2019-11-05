@@ -47,19 +47,29 @@ snake = [[5, 5]]
 x = 5
 y = 5
 jablko = [5, 6]
+speedup = []
+wygrana = 0
 score = 0
-time = 250
+speed = 250
+ordinary_speed = 250
+speedup_speed = 150
+speedup_range = 20
+speedup_time = 0
 przegrana_text = 'Przegrałeś! :<'
 wygrana_text = 'Wygrałeś! :>'
 
 # opcje dodatkowe
-rave = 0
+rave = 1
 diamond_blink = 1
+
+if rave: speed = 150
 
 # ustalanie koordynatów pierwszego jabłka
 win.addch(jablko[0], jablko[1], curses.ACS_DIAMOND, curses.A_STANDOUT)
 
 while key != 27:
+
+    shallgen = random.randint(1, 10)
 
     # migające zdobycze
     if diamond_blink:
@@ -76,7 +86,8 @@ while key != 27:
         curses.init_pair(2, COLORS[col1], COLORS[col2])
         curses.init_pair(3, COLORS[col3], COLORS[col3])
 
-        time = 150
+        speedup_speed = 100
+        ordinary_speed = 150
 
     # zbieramy przyciski
     prevKey = key
@@ -120,6 +131,39 @@ while key != 27:
         wygrana = -1
         break
 
+    #debug
+    stats.addstr(1, 1, str(speedup) + ' ' + str(speedup_time) + ' ' + str(speed))
+    stats.refresh()
+
+    if len(speedup) == 0 and shallgen > 9:
+        while True:
+            speedup.append(random.randint(1, wysokosc - 2))
+            speedup.append(random.randint(1, szerokosc - 2))
+
+            if speedup in snake:
+                speedup.pop()
+                speedup.pop()
+                continue
+
+            if speedup not in snake and speedup not in jablko:
+                break
+
+        win.addch(speedup[0], speedup[1], 'x')
+        stats.clear()
+
+
+    if len(speedup) == 2 and x == speedup[0] and y == speedup[1]:
+        speedup.pop()
+        speedup.pop()
+        stats.clear()
+        speed = speedup_speed
+
+    if speed == speedup_speed:
+        speedup_time += 1
+    if speedup_time > speedup_range:
+        speedup_time = 0
+        speed = ordinary_speed
+
     # rysowanie węza na planszy,teraz z kolorkami xD
     win.addch(x, y, curses.ACS_BOARD, curses.color_pair(3),)
     if len(snake) > 1:
@@ -132,14 +176,14 @@ while key != 27:
     # wynik/wydłużanie węża
     if x == jablko[0] and y == jablko[1]:
         score += 1
-        stats.addstr(1, 1, 'Wynik:' + str(score))
+        #stats.addstr(1, 1, 'Wynik:' + str(score))
         stats.refresh()
         # tworzenie nowych koordynatów jabłka
         while True:
             jablko[0] = random.randint(1, wysokosc - 2)
             jablko[1] = random.randint(1, szerokosc - 2)
 
-            if jablko not in snake:
+            if jablko not in snake and jablko not in speedup:
                 break
 
         # dodawanie jabłka
@@ -150,20 +194,19 @@ while key != 27:
     else:
         win.addch(snake[-1][0], snake[-1][1], ' ')
         snake.pop()
-
-    if score >= pole - 1 :
+    if score >= pole - 1:
         wygrana = 1
         break
 
     # opóźnienie, dwie opcje, z czego druga bardziej responsywna
-    # curses.napms(time)
-    win.timeout(time)
+    # curses.napms(speed)
+    win.timeout(speed)
 
-if wygrana == -1 :
-    win.addstr(int((wysokosc)/2), int(szerokosc/2) - int(len(przegrana_text) / 2), przegrana_text)
+if wygrana == -1:
+    win.addstr(int(wysokosc/2), int(szerokosc/2) - int(len(przegrana_text) / 2), przegrana_text)
 
-if wygrana == 1 :
-    win.addstr(int((wysokosc)/2), int(szerokosc/2) - int(len(wygrana_text) / 2), wygrana_text)
+if wygrana == 1:
+    win.addstr(int(wysokosc/2), int(szerokosc/2) - int(len(wygrana_text) / 2), wygrana_text)
 
 win.refresh()
 while True:
