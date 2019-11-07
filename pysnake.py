@@ -1,6 +1,8 @@
 import curses, random
 from curses import KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN
 
+#TODO make func out of rave or at least make use of it in powerup powerup
+
 przegrana_text = 'Przegrałeś!'
 wygrana_text = 'Wygrałeś!'
 
@@ -39,6 +41,7 @@ COLORS = [curses.COLOR_BLUE, curses.COLOR_CYAN,
 curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
 curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_GREEN)
 curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
+curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
 
 
 # opcje startowe
@@ -47,29 +50,27 @@ snake = [[5, 5]]
 x = 5
 y = 5
 jablko = [5, 6]
-speedup = []
+powerup = []
 wygrana = 0
 score = 0
 speed = 250
-ordinary_speed = 250
-speedup_speed = 150
-speedup_range = 20
-speedup_time = 0
+ordinary_speed = 200
+rave_speed = 125
+rave_range = 30
+rave_time = 0
 przegrana_text = 'Przegrałeś! :<'
 wygrana_text = 'Wygrałeś! :>'
 
 # opcje dodatkowe
-rave = 1
+rave = 0
 diamond_blink = 1
-
-if rave: speed = 150
 
 # ustalanie koordynatów pierwszego jabłka
 win.addch(jablko[0], jablko[1], curses.ACS_DIAMOND, curses.A_STANDOUT)
 
 while key != 27:
 
-    shallgen = random.randint(1, 10)
+    shallgen = random.randint(1, 200)
 
     # migające zdobycze
     if diamond_blink:
@@ -85,9 +86,9 @@ while key != 27:
         curses.init_pair(1, COLORS[col2], COLORS[col1])
         curses.init_pair(2, COLORS[col1], COLORS[col2])
         curses.init_pair(3, COLORS[col3], COLORS[col3])
+        curses.init_pair(4, COLORS[col3], curses.COLOR_BLACK)
 
-        speedup_speed = 100
-        ordinary_speed = 150
+        speed = rave_speed
 
     # zbieramy przyciski
     prevKey = key
@@ -131,38 +132,49 @@ while key != 27:
         wygrana = -1
         break
 
-    #debug
-    stats.addstr(1, 1, str(speedup) + ' ' + str(speedup_time) + ' ' + str(speed))
-    stats.refresh()
+    # debug
+    # stats.clear()
+    # stats.addstr(1, 1, str(powerup) + ' ' + str(rave_time) + ' ' + str(speed) + ' ' + str(shallgen))
+    # stats.refresh()
 
-    if len(speedup) == 0 and shallgen > 9:
+    # generowanie powerupa
+    if len(powerup) == 0 and shallgen > 199:
         while True:
-            speedup.append(random.randint(1, wysokosc - 2))
-            speedup.append(random.randint(1, szerokosc - 2))
+            powerup.append(random.randint(1, wysokosc - 2))
+            powerup.append(random.randint(1, szerokosc - 2))
 
-            if speedup in snake:
-                speedup.pop()
-                speedup.pop()
+            # TODO przepisać to wszystko bo ten kod to śmietink a do tego wolny
+            if powerup in snake:
+                powerup.pop()
+                powerup.pop()
                 continue
 
-            if speedup not in snake and speedup not in jablko:
+            if powerup not in snake and powerup not in jablko:
                 break
+        # rysowanie powerupa
+        win.addch(powerup[0], powerup[1], curses.ACS_DEGREE, curses.color_pair(4))
+        # stats.clear()
 
-        win.addch(speedup[0], speedup[1], 'x')
-        stats.clear()
+    # gdy snejk wejdzie w powerupa, który nie zdążył się jeszcze zepsuć xD( if len powerup == 2 )
+    if len(powerup) == 2 and x == powerup[0] and y == powerup[1]:
+        powerup.pop()
+        powerup.pop()
+        # stats.clear()
+        rave = 1
 
+    # jeżeli powerup jest aktywny, zwieksz czas
+    if rave == 1:
+        rave_time += 1
 
-    if len(speedup) == 2 and x == speedup[0] and y == speedup[1]:
-        speedup.pop()
-        speedup.pop()
-        stats.clear()
-        speed = speedup_speed
-
-    if speed == speedup_speed:
-        speedup_time += 1
-    if speedup_time > speedup_range:
-        speedup_time = 0
+    # jezeli czas aktywnego powerupa równa się max zasięgowi czasu, zresetuj ustawienia
+    if rave_time > rave_range:
+        # restart ustawień zwykłych, poza rave
+        rave_time = 0
+        rave = 0
         speed = ordinary_speed
+        curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_GREEN)
+        curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
 
     # rysowanie węza na planszy,teraz z kolorkami xD
     win.addch(x, y, curses.ACS_BOARD, curses.color_pair(3),)
@@ -176,14 +188,14 @@ while key != 27:
     # wynik/wydłużanie węża
     if x == jablko[0] and y == jablko[1]:
         score += 1
-        #stats.addstr(1, 1, 'Wynik:' + str(score))
+        stats.addstr(1, 1, 'Wynik:' + str(score))
         stats.refresh()
         # tworzenie nowych koordynatów jabłka
         while True:
             jablko[0] = random.randint(1, wysokosc - 2)
             jablko[1] = random.randint(1, szerokosc - 2)
 
-            if jablko not in snake and jablko not in speedup:
+            if jablko not in snake and jablko not in powerup:
                 break
 
         # dodawanie jabłka
