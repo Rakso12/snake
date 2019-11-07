@@ -1,8 +1,6 @@
 import curses, random
 from curses import KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN
 
-#TODO make func out of rave or at least make use of it in powerup powerup
-
 przegrana_text = 'Przegrałeś!'
 wygrana_text = 'Wygrałeś!'
 
@@ -12,7 +10,7 @@ curses.start_color()
 # badamy wielkość terminala
 wysokosc, szerokosc = scr.getmaxyx()
 
-if wysokosc < 10 or szerokosc < len(przegrana_text) + 2:
+if wysokosc < 10 or szerokosc < len(przegrana_text) + 5:
     print('Zbyt mało miejsca, aby rozpocząć grę.')
     exit()
 
@@ -54,8 +52,8 @@ powerup = []
 len_add = 0
 wygrana = 0
 score = 0
-speed = 175
-ordinary_speed = 175
+speed = 190
+ordinary_speed = 190
 rave_speed = 125
 rave_range = 5
 rave_time = 0
@@ -69,10 +67,15 @@ diamond_blink = 0
 # ustalanie koordynatów pierwszego jabłka
 win.addch(jablko[0], jablko[1], curses.ACS_DIAMOND, curses.A_STANDOUT)
 
+stats.addstr(1, szerokosc - 6, 'SNAKE')
+
 while key != 27:
 
-    shallgen = random.randint(1, 100)
-    #200
+    if score >= pole - 1:
+        wygrana = 1
+        break
+
+    shallgen = random.randint(1, 199)
 
     # migające zdobycze
     if diamond_blink:
@@ -124,7 +127,6 @@ while key != 27:
     elif key == KEY_DOWN:
         x += 1
 
-
     # granice planszy
     if x == 0 or x == wysokosc - 1 or y == 0 or y == szerokosc - 1:
         wygrana = -1
@@ -136,34 +138,30 @@ while key != 27:
         break
 
     # debug
-    #stats.clear()
-    #stats.addstr(1, 1, str(powerup) + ' ' + str(rave_time) + ' ' + str(speed) + ' ' + str(shallgen) + ' ' + str(event))
-    #stats.addstr(1, 1, str(snake))
-    #stats.refresh()
+    # stats.clear()
+    # stats.addstr(1, 1, str(powerup) + ' ' + str(rave_time) + ' ' + str(speed) + ' ' + str(shallgen) + ' ' + str(event))
+    # stats.addstr(1, 1, str(snake))
+    # stats.refresh()
 
     # generowanie powerupa
-    if len(powerup) == 0 and shallgen > 99:
-        while True:
-            powerup.append(random.randint(1, wysokosc - 2))
-            powerup.append(random.randint(1, szerokosc - 2))
+    if len(powerup) == 0 and shallgen > 194:
+        powerup.append(random.randint(1, wysokosc - 2))
+        powerup.append(random.randint(1, szerokosc - 2))
 
-            # TODO przepisać to wszystko bo ten kod to śmietink a do tego wolny
-            if powerup in snake:
-                powerup.pop()
-                powerup.pop()
-                continue
+        # jeżeli nie trafi na snejka albo jablko, narysuj powerupa
+        if powerup not in snake and powerup not in jablko:
+            win.addch(powerup[0], powerup[1], curses.ACS_DEGREE, curses.color_pair(4))
 
-            if powerup not in snake and powerup not in jablko:
-                break
-        # rysowanie powerupa
-        win.addch(powerup[0], powerup[1], curses.ACS_DEGREE, curses.color_pair(4))
+        # wywal współrzędne powerupa
+        else:
+            powerup.pop()
+            powerup.pop()
         # stats.clear()
 
-    # gdy snejk wejdzie w powerupa, który nie zdążył się jeszcze zepsuć xD( if len powerup == 2 )
+    # gdy snejk wejdzie w powerupa, który nie zdążył się jeszcze zepsuć xD
     if len(powerup) == 2 and x == powerup[0] and y == powerup[1]:
         powerup.pop()
         powerup.pop()
-        # stats.clear()
         rave = 1
         len_add = 1
 
@@ -178,6 +176,7 @@ while key != 27:
         rave = 0
         len_add = 0
 
+        # zwiększ score o 5 po zebraniu powerupa i go wyświetl
         score += 5
         stats.addstr(1, 1, 'Wynik:' + str(score))
         stats.refresh()
@@ -217,10 +216,6 @@ while key != 27:
     elif len_add == 0:
         win.addch(snake[-1][0], snake[-1][1], ' ')
         snake.pop()
-
-    if score >= pole - 1:
-        wygrana = 1
-        break
 
     # opóźnienie, dwie opcje, z czego druga bardziej responsywna
     # curses.napms(speed)
