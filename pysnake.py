@@ -51,26 +51,28 @@ x = 5
 y = 5
 jablko = [5, 6]
 powerup = []
+len_add = 0
 wygrana = 0
 score = 0
-speed = 250
-ordinary_speed = 200
+speed = 175
+ordinary_speed = 175
 rave_speed = 125
-rave_range = 30
+rave_range = 5
 rave_time = 0
 przegrana_text = 'Przegrałeś! :<'
 wygrana_text = 'Wygrałeś! :>'
 
 # opcje dodatkowe
 rave = 0
-diamond_blink = 1
+diamond_blink = 0
 
 # ustalanie koordynatów pierwszego jabłka
 win.addch(jablko[0], jablko[1], curses.ACS_DIAMOND, curses.A_STANDOUT)
 
 while key != 27:
 
-    shallgen = random.randint(1, 200)
+    shallgen = random.randint(1, 100)
+    #200
 
     # migające zdobycze
     if diamond_blink:
@@ -112,15 +114,16 @@ while key != 27:
     if event not in (KEY_LEFT, KEY_DOWN, KEY_RIGHT, KEY_UP, -1, 27):
         key = prevKey
 
-    # basically zmienianie koordynatów głowy węża
+    # zmienianie koordynatów głowy węża
     if key == KEY_RIGHT:
         y += 1
-    if key == KEY_LEFT:
+    elif key == KEY_LEFT:
         y -= 1
-    if key == KEY_UP:
+    elif key == KEY_UP:
         x -= 1
-    if key == KEY_DOWN:
+    elif key == KEY_DOWN:
         x += 1
+
 
     # granice planszy
     if x == 0 or x == wysokosc - 1 or y == 0 or y == szerokosc - 1:
@@ -133,12 +136,13 @@ while key != 27:
         break
 
     # debug
-    # stats.clear()
-    # stats.addstr(1, 1, str(powerup) + ' ' + str(rave_time) + ' ' + str(speed) + ' ' + str(shallgen))
-    # stats.refresh()
+    #stats.clear()
+    #stats.addstr(1, 1, str(powerup) + ' ' + str(rave_time) + ' ' + str(speed) + ' ' + str(shallgen) + ' ' + str(event))
+    #stats.addstr(1, 1, str(snake))
+    #stats.refresh()
 
     # generowanie powerupa
-    if len(powerup) == 0 and shallgen > 199:
+    if len(powerup) == 0 and shallgen > 99:
         while True:
             powerup.append(random.randint(1, wysokosc - 2))
             powerup.append(random.randint(1, szerokosc - 2))
@@ -161,6 +165,7 @@ while key != 27:
         powerup.pop()
         # stats.clear()
         rave = 1
+        len_add = 1
 
     # jeżeli powerup jest aktywny, zwieksz czas
     if rave == 1:
@@ -171,6 +176,12 @@ while key != 27:
         # restart ustawień zwykłych, poza rave
         rave_time = 0
         rave = 0
+        len_add = 0
+
+        score += 5
+        stats.addstr(1, 1, 'Wynik:' + str(score))
+        stats.refresh()
+
         speed = ordinary_speed
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_GREEN)
@@ -203,9 +214,10 @@ while key != 27:
 
     # jeżeli jabłko nie zostało zebrane, usuń ostatni koordynat węża z listy
     # (długość węża pozostaje taka sama)
-    else:
+    elif len_add == 0:
         win.addch(snake[-1][0], snake[-1][1], ' ')
         snake.pop()
+
     if score >= pole - 1:
         wygrana = 1
         break
