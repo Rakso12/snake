@@ -54,7 +54,7 @@ wygrana = 0
 score = 0
 speed = 190
 ordinary_speed = 190
-rave_speed = 125
+rave_speed = 150
 rave_range = 5
 rave_time = 0
 przegrana_text = 'Przegrałeś! :<'
@@ -127,10 +127,22 @@ while key != 27:
     elif key == KEY_DOWN:
         x += 1
 
-    # granice planszy
+    # rozbijanie się o ściany
     if x == 0 or x == wysokosc - 1 or y == 0 or y == szerokosc - 1:
         wygrana = -1
         break
+    
+    # przechodzenie przez ściany
+    '''
+    if x == 0:
+        x = wysokosc - 2
+    elif x == wysokosc - 1:
+        x = 1
+    elif y == 0:
+        y = szerokosc - 2
+    elif y == szerokosc - 1:
+        y = 1
+        '''
 
     # wchodzenie węża w samego siebie
     if [x, y] in snake:
@@ -144,7 +156,7 @@ while key != 27:
     # stats.refresh()
 
     # generowanie powerupa
-    if len(powerup) == 0 and shallgen > 194:
+    if len(powerup) == 0 and shallgen > 19: #194
         powerup.append(random.randint(1, wysokosc - 2))
         powerup.append(random.randint(1, szerokosc - 2))
 
@@ -227,7 +239,6 @@ if wygrana == -1:
 if wygrana == 1:
     win.addstr(int(wysokosc/2), int(szerokosc/2) - int(len(wygrana_text) / 2), wygrana_text)
 
-win.refresh()
 while True:
     if win.getch() != -1:
         break
